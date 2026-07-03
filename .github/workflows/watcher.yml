@@ -1,0 +1,47 @@
+name: ZWiK Łódź water failure watcher
+
+on:
+  schedule:
+    # Runs at the top of every hour (UTC). GitHub may delay busy runners
+    # by a few minutes; that's fine for this use case.
+    - cron: "0 * * * *"
+  workflow_dispatch: {} # lets you trigger a manual run from the Actions tab
+
+# Allow the job to push the updated state file back to the repo.
+permissions:
+  contents: write
+
+concurrency:
+  group: zwik-watcher
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run watcher
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          NEEDLE_PATTERN: ${{ secrets.NEEDLE_PATTERN }}
+        run: python watch_zwik.py
+
+      - name: Persist state
+        run: |
+          if [[ -n "$(git status --porcelain last_seen.txt)" ]]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add last_seen.txt
+            git commit -m "Update last_seen state [skip ci]"
+            git push
+          else
+            echo "No state change to commit."
+          fi
