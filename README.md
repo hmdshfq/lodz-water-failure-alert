@@ -46,9 +46,15 @@ It scrapes the stable failures listing (`.../artykuly/302/awarie`), finds the ne
    - `NEEDLE_PATTERN` = the regex pattern to watch for your residence
 
 ### 4. Test it
-- Repo → **Actions** tab → select **ZWiK Łódź water failure watcher** → **Run workflow**.
-- Check the run logs. To confirm the Telegram wiring end-to-end, temporarily change `NEEDLE_PATTERN` in GitHub secrets to something currently on the page, run once, then revert.
+- Repo → **Actions** tab → select **Test ZWiK watcher notification** → **Run workflow**.
+- If you get Telegram message "ZWiK watcher test message", your bot credentials work.
+- To test the full scrape + match + notify pipeline, change `NEEDLE_PATTERN` in
+  GitHub secrets to something currently on the page, run
+  the main **ZWiK Łódź water failure watcher** workflow, then revert.
 
+### 5 Test locally
+- Add a `.env` file with `TELEGRAM_TOKEN`, `TELEGRAM_CHAT_ID`, and `NEEDLE_PATTERN` set to your bot token, chat ID, and regex pattern, respectively.
+- Run `python3 watcher.py` to test the script locally.
 ---
 
 ## Notes

@@ -7,6 +7,24 @@ import os
 import re
 import sys
 import urllib.request
+import ssl
+
+
+def _load_dotenv() -> None:
+    """Load KEY=VAL lines from .env file into env, if it exists."""
+    try:
+        with open(".env", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith("#"):
+                    continue
+                key, _, val = line.partition("=")
+                os.environ.setdefault(key.strip(), val.strip())
+    except FileNotFoundError:
+        pass
+
+
+_load_dotenv()
 
 LISTING_URL = "https://zwik.lodz.pl/pl/artykuly/302/awarie"
 BASE = "https://zwik.lodz.pl"
@@ -20,11 +38,18 @@ ARTICLE_HREF = re.compile(r'/pl/artykul/302/\d+/komunikat[^"\']*')
 HEADERS = {"User-Agent": "Mozilla/5.0 (zwik-watcher; +github-actions)"}
 TG_API = "https://api.telegram.org/bot{token}/sendMessage"
 
-
 def fetch(url: str) -> str:
     req = urllib.request.Request(url, headers=HEADERS)
-    with urllib.request.urlopen(req, timeout=30) as resp:
-        return resp.read().decode("utf-8", errors="replace")
+    try:
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            return resp.read().decode("utf-8", errors="replace")
+    except urllib.error.URLError:
+        # Retry with unverified context (macOS Python cert issue).
+        ctx = ssl.create_default_context()
+        ctx.check_hostname = False
+        ctx.verify_mode = ssl.CERT_NONE
+        with urllib.request.urlopen(req, timeout=30, context=ctx) as resp:
+            return resp.read().decode("utf-8", errors="replace")
 
 
 def latest_announcement_url() -> str:
@@ -64,8 +89,16 @@ def notify(text: str) -> None:
         data=payload,
         headers={"Content-Type": "application/json"},
     )
-    with urllib.request.urlopen(req, timeout=30) as resp:
-        resp.read()
+    try:
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            resp.read()
+    except urllib.error.URLError:
+
+        ctx = ssl.create_default_context()
+        ctx.check_hostname = False
+        ctx.verify_mode = ssl.CERT_NONE
+        with urllib.request.urlopen(req, timeout=30, context=ctx) as resp:
+            resp.read()
 
 
 def main() -> int:
