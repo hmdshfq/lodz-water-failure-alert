@@ -1,4 +1,6 @@
-# ZWiK Łódź Water Failure Watcher and Notifier — Never get caught mid-shower again
+# ZWiK Łódź Water Failure Watcher and Notifier
+
+_Never get caught mid-shower again_
 
 **Telegram alerts for water failures in Łódź, powered by ZWiK web scraping.**
 
@@ -52,7 +54,7 @@ It scrapes the stable failures listing (`.../artykuly/302/awarie`), finds the ne
   GitHub secrets to something currently on the page, run
   the main **ZWiK Łódź water failure watcher** workflow, then revert.
 
-### 5 Test locally
+### 5. Test locally
 - Add a `.env` file with `TELEGRAM_TOKEN`, `TELEGRAM_CHAT_ID`, and `NEEDLE_PATTERN` set to your bot token, chat ID, and regex pattern, respectively.
 - Run `python3 watcher.py` to test the script locally.
 ---
