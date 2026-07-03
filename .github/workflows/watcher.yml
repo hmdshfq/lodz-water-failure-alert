@@ -1,6 +1,8 @@
 name: ZWiK Łódź water failure watcher
 
 on:
+  push:
+    branches: [main]
   schedule:
     # Runs at the top of every hour (UTC). GitHub may delay busy runners
     # by a few minutes; that's fine for this use case.
