@@ -23,11 +23,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          fetch-depth: 1
 
       - name: Run watcher
         env:
@@ -37,13 +34,7 @@ jobs:
         run: python watcher.py
 
       - name: Persist state
-        run: |
-          if [[ -n "$(git status --porcelain last_seen.txt)" ]]; then
-            git config user.name "github-actions[bot]"
-            git config user.email "github-actions[bot]@users.noreply.github.com"
-            git add last_seen.txt
-            git commit -m "Update last_seen state [skip ci]"
-            git push
-          else
-            echo "No state change to commit."
-          fi
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Update last_seen state [skip ci]"
+          file_pattern: last_seen.txt
