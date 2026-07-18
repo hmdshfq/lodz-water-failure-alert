@@ -6,7 +6,6 @@ const BASE = 'https://zwik.lodz.pl';
 const TG_API = 'https://api.telegram.org/bot{token}/sendMessage';
 const UA = 'Mozilla/5.0 (zwik-watcher; +cloudflare-workers)';
 
-// ponytail: Workers fetch has no per-request timeout knob; platform enforces ~30s.
 async function fetchText(url) {
   const resp = await fetch(url, { headers: { 'User-Agent': UA } });
   if (!resp.ok) throw new Error(`HTTP ${resp.status} for ${url}`);
@@ -73,8 +72,6 @@ export default {
   },
 };
 
-// --- self-check (ponytail) ---
-// ponytail: smallest check — regex matches a sample listing snippet, no frameworks.
 if (typeof globalThis.__selfCheck === 'undefined') {
   globalThis.__selfCheck = true;
   const sample = `<a href="/pl/artykul/302/1234/komunikat-2025-07-01">link</a>`;
