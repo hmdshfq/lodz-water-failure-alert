@@ -40,35 +40,37 @@ It scrapes the stable failures listing (`.../artykuly/302/awarie`), finds the ne
 2. Visit `https://api.telegram.org/bot<YOUR_TOKEN>/getUpdates` in a browser.
 3. Find `"chat":{"id":<NUMBER>}` — that number is your **chat ID**.
 
-### 3. Create the repo and add secrets
-1. Create a new GitHub repo and push these files to it.
-2. Repo → **Settings → Secrets and variables → Actions → New repository secret**:
-   - `TELEGRAM_TOKEN` = your bot token
-   - `TELEGRAM_CHAT_ID` = your chat ID
-   - `NEEDLE_PATTERN` = the regex pattern to watch for your residence
+### 3. Create a KV namespace for state
+```bash
+npx wrangler kv namespace create LAST_SEEN
+```
+Copy the `id` from the output into `wrangler.jsonc` under `kv_namespaces[0].id`.
 
-### 4. Test it
-- Repo → **Actions** tab → select **Test ZWiK watcher notification** → **Run workflow**.
-- If you get Telegram message "ZWiK watcher test message", your bot credentials work.
-- To test the full scrape + match + notify pipeline, change `NEEDLE_PATTERN` in
-  GitHub secrets to something currently on the page, run
-  the main **ZWiK Łódź water failure watcher** workflow, then revert.
+### 4. Set secrets and deploy
+```bash
+npm install
+npx wrangler secret put TELEGRAM_TOKEN      # your bot token
+npx wrangler secret put TELEGRAM_CHAT_ID    # your chat ID
+npx wrangler secret put NEEDLE_PATTERN      # regex pattern for your residence
+npx wrangler deploy
+```
 
-### 5. Test locally
-- Add a `.env` file with `TELEGRAM_TOKEN`, `TELEGRAM_CHAT_ID`, and `NEEDLE_PATTERN` set to your bot token, chat ID, and regex pattern, respectively.
-- Run `python3 watcher.py` to test the script locally.
+### 5. Test it
+```bash
+npx wrangler dev
+```
+- Visit `http://localhost:8787/test` to send a test Telegram message and verify your bot credentials work.
+- Visit `http://localhost:8787/run` to run the full scrape + match + notify pipeline manually.
+- To test the match pipeline, set `NEEDLE_PATTERN` to something currently on the page (via `.dev.vars` for local dev), hit `/run`, then revert.
+
 ---
 
 ## Notes
 
-- **Notified once per occurrence.** State is stored in `last_seen.txt`, which
-  the workflow commits back to the repo. When the notice clears and later
-  reappears, you get pinged again. For an hourly ping the whole time it's
-  listed, delete the state logic in `watcher.py`.
-- **Timing.** Cron is UTC and GitHub can delay scheduled runs on busy runners
-  by several minutes. Fine for an hourly check.
-- **Cost.** Free for public repos. Private repos use free Actions minutes
-  (~1–2 min/run × 24/day is well within the monthly allowance).
+- **Notified once per occurrence.** State is stored in a Cloudflare KV namespace (`LAST_SEEN`). When the notice clears and later reappears, you get pinged again. For an hourly ping the whole time it's listed, delete the state logic in `src/index.js`.
+- **Timing.** Cron runs every 3 hours via Cloudflare Cron Triggers. Cloudflare's scheduling is more reliable than GitHub Actions (no runner queue delays).
+- **Cost.** Free tier covers this easily (Workers free plan: 100k requests/day; KV: 100k reads/day, 1k writes/day — ~8 cron runs/day is negligible).
+- **Routes.** `GET /test` sends a test notification. `GET /run` runs the full check manually. The scheduled handler runs `runCheck` automatically every 3 hours.
 
 ---
 

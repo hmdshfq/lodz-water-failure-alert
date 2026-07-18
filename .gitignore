@@ -1,1 +1,6 @@
 .env
+node_modules/
+.wrangler/
+.dev.vars
+.pi-subagents/
+.pi/
