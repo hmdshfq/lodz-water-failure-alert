@@ -1,0 +1,11 @@
+{
+  "name": "zwik-water-watcher",
+  "main": "src/index.js",
+  "compatibility_date": "2025-07-01",
+  "kv_namespaces": [
+    { "binding": "LAST_SEEN", "id": "eb70dd6f9928430383ddcb4a6a0c4df4" }
+  ],
+  "triggers": {
+    "crons": ["0 */3 * * *"]
+  }
+}
